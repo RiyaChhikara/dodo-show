@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dodo_posture_fixer"
+version = "0.1.0"
+description = "Dodo nags when you slouch: local MediaPipe Pose, tiny goto_target sit-up."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Riya Chhikara" },
+]
+dependencies = [
+    "reachy-mini",
+]
+keywords = ["reachy-mini-app"]
+
+[project.entry-points."reachy_mini_apps"]
+dodo_posture_fixer = "dodo_posture_fixer.main:DodoPostureFixer"
+
+[tool.setuptools]
+package-dir = { "" = "." }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+dodo_posture_fixer = ["static/*"]

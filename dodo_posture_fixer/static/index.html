@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dodo · Posture</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/dodo.css">
+</head>
+<body>
+    <div class="stage" id="stage">
+        <div class="top">
+            <div class="mark" aria-hidden="true">🪑</div>
+            <div>
+                <div class="brand">Reachy Mini · Dodo</div>
+                <h1>Posture</h1>
+            </div>
+        </div>
+        <p class="lede">Sit where she can see your shoulders. Slouch, she nags. Sit up, she settles. Local pose, no cloud.</p>
+        <div class="viewport">
+            <img id="feed" alt="What Dodo sees" src="/video_feed">
+        </div>
+        <div class="pill" id="pill">Starting</div>
+        <p id="headline">Shoulders in frame</p>
+        <p id="detail"></p>
+        <div class="actions">
+            <button type="button" id="pause">Pause</button>
+            <button type="button" class="ghost" id="fake">Fake slouch</button>
+        </div>
+        <p id="talk-msg"></p>
+        <p id="log"></p>
+        <p class="note">Dashboard Logs will not show this. Stop other camera apps first. Hardware sit-up is still a TODO until tried on Dodo.</p>
+    </div>
+    <script>
+        const stage = document.getElementById("stage");
+        const pill = document.getElementById("pill");
+        const headline = document.getElementById("headline");
+        const detail = document.getElementById("detail");
+        const log = document.getElementById("log");
+        const talkMsg = document.getElementById("talk-msg");
+        const pauseBtn = document.getElementById("pause");
+
+        async function sendBody(body) {
+            talkMsg.textContent = "Sending…";
+            try {
+                const data = await (await fetch("/talk", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                })).json();
+                talkMsg.textContent = data.ok ? "" : (data.error || "Could not send");
+            } catch (err) {
+                talkMsg.textContent = "Talk failed. Try again after Start.";
+            }
+        }
+
+        async function refresh() {
+            try {
+                const data = await (await fetch("/status")).json();
+                stage.classList.toggle("nag", !!data.slouch);
+                stage.classList.toggle("ok", !data.slouch && data.listening === "watching");
+                pill.textContent = data.pill || "Ready";
+                headline.textContent = data.headline || "";
+                detail.textContent = data.detail || "";
+                pauseBtn.textContent = data.hold ? "Resume" : "Pause";
+                pauseBtn.dataset.hold = data.hold ? "1" : "0";
+                log.textContent = [data.camera, data.cue, data.last_error].filter(Boolean).join(" · ");
+            } catch (err) {
+                log.textContent = "Could not read /status. Is the app started?";
+            }
+        }
+
+        pauseBtn.addEventListener("click", () => {
+            sendBody({ action: pauseBtn.dataset.hold === "1" ? "resume" : "pause" });
+        });
+        document.getElementById("fake").addEventListener("click", () => sendBody({ action: "slouch" }));
+        refresh();
+        setInterval(refresh, 700);
+    </script>
+</body>
+</html>
